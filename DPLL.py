@@ -49,6 +49,9 @@ def main():
     with open("entradaDPLL.txt","r") as  arq:
         for i in arq.readlines():
             formula.append([int(j) for j in i.split(" ")])
+        if(formula[0][-1] == 0):
+            for i in formula:
+                i.remove(0)
     print(formula)
     print(dpll_algoritimo(formula))        
     
