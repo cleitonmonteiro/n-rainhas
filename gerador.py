@@ -62,9 +62,9 @@ def diagonaisSecundarias():
     def pegarDiagonal(linha, coluna, numero):
         aux = numero
         while(linha < n and coluna > 1):
-            print(-aux, -(numero*(n+1)), '0')
-            numero -= (n+1)
-            linha -= 1
+            print(-aux, -(numero+(n-1)), '0')
+            numero += (n-1)
+            linha += 1
             coluna -= 1
     
     m = 1
@@ -85,7 +85,7 @@ def numClausulasDiagonais():
     return ret
 
 print('total:', numClausulasDiagonais())
-# diagonaisPrimarias()
+#diagonaisPrimarias()
 diagonaisSecundarias()
 
 # print(combinacao(5, 2))
