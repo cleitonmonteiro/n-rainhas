@@ -3,20 +3,23 @@
 using namespace std;
 
 int n;
-
+FILE *output;
+unsigned long num_linhas = 0;
 void clausulas_linhas() {
     for (int linha = 1; linha <= n; linha++) {
         int num_inicial_linha = (n * (linha - 1)) + 1;
         int num_final_linha = num_inicial_linha + n - 1;
 
         for (int i = num_inicial_linha; i <= num_final_linha; i++) {
-            cout << i << " ";
+            fprintf(output, "%i ", i);
         }
-        cout << "0\n";
+        fprintf(output, "0\n");
+        num_linhas ++;
 
         for (int i = num_inicial_linha; i <= num_final_linha; i++) {
             for (int k = i+1; k <= num_final_linha; k++) {
-                cout << -i << " " << -k << " 0\n";
+                fprintf(output, "%i %i 0\n", -i, -k);
+                num_linhas ++;
             }
         }
     }
@@ -25,13 +28,15 @@ void clausulas_linhas() {
 void clausulas_colunas() {
     for (int coluna = 1; coluna <= n; coluna++) {
         for (int i = coluna; i < n*n + 1; i+=n) {
-            cout << i << " ";
+            fprintf(output, "%i ", i);
         }
-        cout << "0\n";
+        fprintf(output, "0\n");
+        num_linhas ++;
         
         for (int i = coluna; i < n*n + 1; i+=n) {
             for(int k = i+n; k < n*n + 1; k+=n) {
-                cout << -i << " " << -k << " 0\n";
+                fprintf(output, "%i %i 0\n", -i, -k);
+                num_linhas ++;
             }            
         }
     }    
@@ -54,13 +59,13 @@ void clausulas_diagonais_primarias() {
         linha_atual++;
         coluna_atual++;
         while (linha_atual <= n && coluna_atual <= n) {
-            cout << -i << " " << -prox << " 0\n";
+            fprintf(output, "%i %i 0\n", -i, -prox);
+            num_linhas ++;
             prox += (n+1);
             linha_atual++;
             coluna_atual++;
         }
     }
-    
 }
 
 void clausulas_diagonais_secundarias() {
@@ -74,7 +79,8 @@ void clausulas_diagonais_secundarias() {
             aux = numero;
             
             while (copy_linha < n && copy_coluna > 1) {
-                cout << -aux << " " << -(copy_numero+(n-1)) << " 0\n";
+                fprintf(output, "%i %i 0\n", -aux, -(copy_numero+(n-1)));
+                num_linhas ++;
                 copy_numero += (n-1);
                 copy_linha++;
                 copy_coluna--;
@@ -84,6 +90,11 @@ void clausulas_diagonais_secundarias() {
     }
 }
 
+void add_config(){
+    fseek(output, 0, 0);
+    fprintf(output, "p cnf %16lu %16lu\n", (unsigned long)n*n, num_linhas);
+}
+
 int main(int argc, char const *argv[]) {
     
     if (argc == 1) {
@@ -91,10 +102,16 @@ int main(int argc, char const *argv[]) {
         exit(-1);
     }
     n = stoi(argv[1]);
+    string arq = to_string(n) +"-rainhas.cnf";
+    output = fopen(arq.c_str(), "w");
+
+    fprintf(output, "p cnf %16lu %16lu\n", (unsigned long)0, (unsigned long)0);
 
     clausulas_linhas();
     clausulas_colunas();
     clausulas_diagonais_primarias();
     clausulas_diagonais_secundarias();
+    add_config();
+    fclose(output);
     return 0;
 }

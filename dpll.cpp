@@ -7,8 +7,6 @@
 
 using namespace std;
 vector<int> valoracao;
-int c=0;
-// bool valoracao[36];
 
 int get_literal_clausula_unitaria( vector<vector<int>> formula ) {
     int literal = 0;
@@ -55,14 +53,6 @@ bool contem_clausula_vazia( vector<vector<int>> formula ) {
     return false;
 }
 
-void add_unitarias(vector<vector<int>> formula) {
-    for( int i=0; i < formula.size(); i++ ) {
-        if(formula[i].size() == 1){
-            valoracao.push_back(formula[i][0]);
-        }
-    }
-}
-
 vector<vector<int>> simplifica( vector<vector<int>> formula ) {
     int literal, i;
 
@@ -72,7 +62,6 @@ vector<vector<int>> simplifica( vector<vector<int>> formula ) {
         if ( literal == 0 ) break;
 
         valoracao.push_back(literal);
-        c++;
 
         remover_clausulas_com_literal( literal, formula );
         remover_negacao_literal( literal, formula );
@@ -80,31 +69,47 @@ vector<vector<int>> simplifica( vector<vector<int>> formula ) {
     return formula;
 }
 
-void exibir_valoracao(){
+void sat(){
     vector<int>::iterator it;
     vector<int> temp;
-    for(auto l : valoracao){
-        it = find( valoracao.begin(), valoracao.end(), -l );
-        if( it == valoracao.end() && l > 0){
-            cout << l << " ";
+    for(int i=1; i <= valoracao.size(); i++){
+        it = find( valoracao.begin(), valoracao.end(), -i );
+        if( it == valoracao.end()){
+            temp.push_back(i);
+        }else {
+            temp.push_back(-i);
         }
     }
-    cout << "0\n";
+    string arq = "valoracao.txt";
+    FILE *f = fopen(arq.c_str(), "w");
+    for(int i=0; i< temp.size(); i++){
+        fprintf(f, "%i ", temp[i]);
+    }
+    fprintf(f, "0\n");
+    fclose(f);
+}
+
+void unsat(){
+    FILE *f = fopen("valoracao.txt", "w");
+    fprintf(f, "UNSAT\n");
+    fclose(f);
 }
 
 bool dpll( vector<vector<int>> formula ) {
-    int aux = c;
+    int temp = valoracao.size();
+
     formula = simplifica(formula);
     
     if( formula.empty() ) return true;
     if( contem_clausula_vazia( formula) ) {
-        while( c != aux ){
-            valoracao.pop_back();
-            c--;
-        }
+        valoracao.erase(valoracao.begin()+temp, valoracao.end());
         return false;
     }
-    int literal = formula[0][1];
+    int literal = formula[0][0];
+
+    if(formula[0].size() > 1){
+        literal = formula[0][1];
+    }
 
     formula.push_back( { literal } );
 
@@ -118,44 +123,49 @@ bool dpll( vector<vector<int>> formula ) {
     if( dpll( formula ) ){
         return true;
     }
-    while( c != aux ){
-        valoracao.pop_back();
-        c--;
-    }
+    valoracao.erase(valoracao.begin()+temp, valoracao.end());
     return false;
 }
 
-
-int main( int argc, char const *argv[] ) {
-    clock_t tempo_inicial, tempo_final;
-    double tempo_execucao;
-
-    tempo_inicial = clock();
-
+vector<vector<int>> read_cnf(){
     vector<vector<int>> formula;
-    vector<int> clausula;    
+    vector<int> clausula;
     int literal;
-
-    while ( cin >> literal ) {
+    string temp;
+    getline(cin, temp);
+    while (cin >> literal) {
         clausula.clear();
-        while ( literal ) {
+        while ( literal != 0) {
             clausula.push_back( literal );
             cin >> literal;
         }
         formula.push_back( clausula );
     }
+    return formula;
+}
 
+int main( int argc, char const *argv[] ) {
+
+    clock_t tempo_inicial, tempo_final;
+    double tempo_execucao;
+
+    cout << "d\tLendo clausulas...\n";
+    vector<vector<int>> formula = read_cnf();
+
+    cout << "d\tIniciando DPLL...\n";
+    tempo_inicial = clock();
     bool resultado = dpll( formula );
-
     tempo_final = clock();
+    
     tempo_execucao = ((double)(tempo_final - tempo_inicial)) / CLOCKS_PER_SEC;
 
     if ( resultado ) {
         cout << "d\tSATISFIABLE\n";
-        exibir_valoracao();
+        sat();
     } else {
         cout << "d\tUNSATISFIABLE\n";
+        unsat();
     }
-    printf("d\tRUNTIME : %lf seconds\n", tempo_execucao);
+    printf("d\tRUNTIME DPLL: %lf seconds\n", tempo_execucao);
     return 0;
 }
