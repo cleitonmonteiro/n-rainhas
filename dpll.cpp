@@ -6,7 +6,9 @@
 #include <set>
 
 using namespace std;
-
+vector<int> valoracao;
+int c=0;
+// bool valoracao[36];
 
 int get_literal_clausula_unitaria( vector<vector<int>> formula ) {
     int literal = 0;
@@ -46,11 +48,19 @@ void remover_negacao_literal( int literal, vector<vector<int>> &formula ) {
 
 bool contem_clausula_vazia( vector<vector<int>> formula ) {
     for( int i=0; i < formula.size(); i++ ) {
-        if ( formula[i].size() == 0 ){
+        if ( formula[i].empty() ){
             return true;
         }
     }
     return false;
+}
+
+void add_unitarias(vector<vector<int>> formula) {
+    for( int i=0; i < formula.size(); i++ ) {
+        if(formula[i].size() == 1){
+            valoracao.push_back(formula[i][0]);
+        }
+    }
 }
 
 vector<vector<int>> simplifica( vector<vector<int>> formula ) {
@@ -61,19 +71,40 @@ vector<vector<int>> simplifica( vector<vector<int>> formula ) {
         
         if ( literal == 0 ) break;
 
+        valoracao.push_back(literal);
+        c++;
+
         remover_clausulas_com_literal( literal, formula );
         remover_negacao_literal( literal, formula );
     }
     return formula;
 }
 
+void exibir_valoracao(){
+    vector<int>::iterator it;
+    vector<int> temp;
+    for(auto l : valoracao){
+        it = find( valoracao.begin(), valoracao.end(), -l );
+        if( it == valoracao.end() && l > 0){
+            cout << l << " ";
+        }
+    }
+    cout << "0\n";
+}
+
 bool dpll( vector<vector<int>> formula ) {
+    int aux = c;
     formula = simplifica(formula);
     
     if( formula.empty() ) return true;
-    if( contem_clausula_vazia( formula) ) return false;
-
-    int literal = formula[0][0];
+    if( contem_clausula_vazia( formula) ) {
+        while( c != aux ){
+            valoracao.pop_back();
+            c--;
+        }
+        return false;
+    }
+    int literal = formula[0][1];
 
     formula.push_back( { literal } );
 
@@ -84,7 +115,13 @@ bool dpll( vector<vector<int>> formula ) {
     formula.pop_back();
     formula.push_back( { -literal } );
     
-    if( dpll( formula ) ) return true;
+    if( dpll( formula ) ){
+        return true;
+    }
+    while( c != aux ){
+        valoracao.pop_back();
+        c--;
+    }
     return false;
 }
 
@@ -115,6 +152,7 @@ int main( int argc, char const *argv[] ) {
 
     if ( resultado ) {
         cout << "d\tSATISFIABLE\n";
+        exibir_valoracao();
     } else {
         cout << "d\tUNSATISFIABLE\n";
     }
