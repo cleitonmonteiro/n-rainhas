@@ -1,23 +1,28 @@
 from os import popen 
 import time
-Nrainhas =  int(input("numero de rainhas: "))
-if(Nrainhas <= 0):
-    print("problema")
-    exit(1)
-elif(Nrainhas >= 1 and Nrainhas <= 3):
-    print("unsat")
+
+n_rainhas =  int(input("Número de rainhas: "))
+
+if(n_rainhas <= 0):
+    print("Número inválido, informe um número maior que 0!")
     exit(1)
 else:
+    print("Compilando arquivos gerador-clausulas.cpp e dpll.cpp ...")
     popen("g++ gerador-clausulas.cpp -o gerador")
     popen("g++ dpll.cpp -o dpll")
     time.sleep(3)
-    aux = "./gerador " + str(Nrainhas)
+    print("Gerando arquivo " + str(n_rainhas) +"-rainhas.cnf ...")
+    aux = "./gerador " + str(n_rainhas)
     popen(aux)
     time.sleep(3)
-    aux = "./dpll <" + str(Nrainhas) +"-rainhas.cnf" 
+    print("Executando DPLL com ", str(n_rainhas) +"-rainhas.cnf")
+    aux = "./dpll <" + str(n_rainhas) +"-rainhas.cnf" 
     print(popen(aux).read())
 
-
+    # nao exibir tabuleiro
+    if (n_rainhas <= 3):
+        exit(0)
+    # exibindo o tabuleiro com valoracao
     import math
     texto = ""
     with open("valoracao.txt","r") as arq:
@@ -25,10 +30,11 @@ else:
 
     rainhas = texto.split(" ")
     import matplotlib.pyplot as plt
+    
     nrainhas = math.sqrt(len(rainhas))
     nrainhas = int(nrainhas)
+    
     for i in range(nrainhas):
-            #[x,x],[y,y] 
         plt.plot([i,i],[0,nrainhas],color="black")
         plt.plot([0,nrainhas],[i,i],color="black")
 
